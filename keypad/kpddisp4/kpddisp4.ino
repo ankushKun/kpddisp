@@ -29,6 +29,7 @@ void setup() {
   pinMode(5, OUTPUT);
   pinMode(9, OUTPUT);
   pinMode(6, OUTPUT);
+  pinMode(2, OUTPUT);
   pinMode(LEDdata, OUTPUT); 
 
 shiftOut(LEDdata,9,LSBFIRST,19);
