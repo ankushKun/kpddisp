@@ -1,4 +1,10 @@
 #include <Keypad.h>
+#include <IRremote.h>
+
+
+#define IR A2
+IRrecv irrecv(IR);
+
 
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -55,16 +61,41 @@ shiftOut(LEDdata,5,LSBFIRST,17);
 shiftOut(LEDdata,5,LSBFIRST,225);
 shiftOut(LEDdata,5,LSBFIRST,99);
 
+irrecv.enableIRIn();
+Serial.println("Enabled IRin");
+//Initialize_streamer();
+
 }
 
 void loop() {
   
-  
-  
   char key = Kpd.getKey();
-
-  if (key){
+  decode_results result;
+  
+  
+  if (key || irrecv.decode(&result)){
     Serial.println(key);
+    Serial.println(result.value);
+    
+    switch(result.value){
+     case 824: key='A';break;
+     case 2872: key='B';break;
+     case 1848: key='C';break;
+     case 3896: key='D';break;
+     
+     case 2320:key='0';break;
+     case 16:key='1';break;
+     case 2064:key='2';break;
+     case 1040:key='3';break;
+     case 3088:key='4';break;
+     case 528:key='5';break;
+     case 2576:key='6';break;
+     case 1552:key='7';break;
+     case 3600:key='8';break;
+     case 272:key='9';break;
+     case 1680:key='#';break;
+    }
+    
      switch(key){      
       // case '*':
       //   if(pin>=3){
@@ -120,13 +151,16 @@ void loop() {
          pin=4;
        break;
       
-       default:
-         pin=nullpin;
-       break;
+       //default:
+       //  pin=nullpin;
+       //break;
        
      
        
      }
+     delay(250);
+     
+     irrecv.resume();
    }
  
 }
