@@ -1,9 +1,18 @@
 #include <Arduino.h>
 #include <Keypad.h>
 #include <IRremote.h>
+#include <EEPROM.h>
 
 #define IR A2
 IRrecv irrecv(IR);
+
+///////////////////////////// SET TO TRUE TO SAVE MEMORY
+///////////////////////////////////////////////////////
+#define SAVE_MEMORY false ////////////////////////////
+/////////////////////////////////////////////////////
+
+int EEPROM_SIZE = 512;
+int num_size = 5;
 
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -22,6 +31,7 @@ byte t[] = {2, 158, 36, 12, 152, 72, 64, 30, 0, 8};
 #define nullpin -1
 int clk[] = {nullpin, 5, 9, 6, 2}; // 5 is for 3 digit
 int pin = 0;
+int eeprom_store_pos = -1;
 
 int LEDdata = 7;
 
@@ -58,9 +68,50 @@ void setup()
   shiftOut(LEDdata, 5, LSBFIRST, 225);
   shiftOut(LEDdata, 5, LSBFIRST, 99);
 
+  delay(1000);
+
+  if (SAVE_MEMORY)
+  {
+    // load from eeprom and show
+    for (int i = 0; i < 4; i++)
+    {
+      int addr = num_size * i;
+      for (int j = 0; j < num_size; j++)
+      {
+        shiftOut(LEDdata, clk[i + 1], LSBFIRST, t[EEPROM.read(addr + j)]);
+        Serial.print(EEPROM.read(addr + j));
+      }
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+
   irrecv.enableIRIn();
   Serial.println("Enabled IRin");
   // Initialize_streamer();
+}
+
+// 0   4 5   9
+// 00000 00000 00000 00000
+
+void shift_eeprom(int num)
+{
+  if (eeprom_store_pos != -1)
+  {
+    int addr = eeprom_store_pos;
+    for (int i = 0; i < num_size; i++)
+    {
+      int write_addr = addr + i;
+      if (i == num_size - 1)
+      {
+        EEPROM.write(write_addr, num);
+      }
+      else
+      {
+        EEPROM.write(write_addr, EEPROM.read(write_addr + 1));
+      }
+    }
+  }
 }
 
 void loop()
@@ -154,51 +205,75 @@ void loop()
       break;
     case '0':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[0]);
+      shift_eeprom(0);
       break;
     case '1':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[1]);
+      shift_eeprom(1);
       break;
     case '2':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[2]);
+      shift_eeprom(2);
       break;
     case '3':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[3]);
+      shift_eeprom(3);
       break;
     case '4':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[4]);
+      shift_eeprom(4);
       break;
     case '5':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[5]);
+      shift_eeprom(5);
       break;
     case '6':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[6]);
+      shift_eeprom(6);
       break;
     case '7':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[7]);
+      shift_eeprom(7);
       break;
     case '8':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[8]);
+      shift_eeprom(8);
       break;
     case '9':
       shiftOut(LEDdata, clk[pin], LSBFIRST, b[9]);
+      shift_eeprom(9);
       break;
     case 'A':
       pin = 1;
+      eeprom_store_pos = num_size * 0;
       break;
     case 'B':
       pin = 2;
+      eeprom_store_pos = num_size * 1;
       break;
     case 'C':
       pin = 3;
+      eeprom_store_pos = num_size * 2;
       break;
     case 'D':
       pin = 4;
+      eeprom_store_pos = num_size * 3;
       break;
 
       // default:
       //   pin=nullpin;
       // break;
     }
+    for (int i = 0; i < 4; i++)
+    {
+      int addr = num_size * i;
+      for (int j = 0; j < num_size; j++)
+      {
+        Serial.print(EEPROM.read(addr + j));
+      }
+      Serial.print(" ");
+    }
+    Serial.println();
     delay(250);
 
     irrecv.resume();
