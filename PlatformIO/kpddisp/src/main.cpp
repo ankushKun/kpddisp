@@ -6,30 +6,32 @@
 #define IR A2
 IRrecv irrecv(IR);
 
+
 ///////////////////////////// SET TO TRUE TO SAVE MEMORY
 ///////////////////////////////////////////////////////
-#define SAVE_MEMORY false ////////////////////////////
+#define SAVE_MEMORY true ////////////////////////////
 /////////////////////////////////////////////////////
 
 int EEPROM_SIZE = 512;
 int num_size = 5;
+int saves = 6;
 
-const byte ROWS = 4;
-const byte COLS = 4;
-char keys[ROWS][COLS] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
-byte rowPins[ROWS] = {10, 12, 11, 8};
-byte colPins[COLS] = {4, 3, A1, A0};
-Keypad Kpd = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+// const byte ROWS = 4;
+// const byte COLS = 4;
+// char keys[ROWS][COLS] = {
+//     {'1', '2', '3', 'A'},
+//     {'4', '5', '6', 'B'},
+//     {'7', '8', '9', 'C'},
+//     {'*', '0', '#', 'D'}};
+// byte rowPins[ROWS] = {10, 12, 11, 8};
+// byte colPins[COLS] = {4, 3, A1, A0};
+// Keypad Kpd = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 byte b[] = {3, 159, 37, 13, 153, 73, 65, 31, 1, 9};
 byte t[] = {2, 158, 36, 12, 152, 72, 64, 30, 0, 8};
 
 #define nullpin -1
-int clk[] = {nullpin, 5, 9, 6, 2}; // 5 is for 3 digit
+int clk[] = {nullpin, 5, 9, 6, 2, 4, 3}; // 5 is for 3 digit
 int pin = 0;
 int eeprom_store_pos = -1;
 
@@ -44,7 +46,21 @@ void setup()
   pinMode(9, OUTPUT);
   pinMode(6, OUTPUT);
   pinMode(2, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(3, OUTPUT);
   pinMode(LEDdata, OUTPUT);
+
+  shiftOut(LEDdata, 4, LSBFIRST, 19);
+  shiftOut(LEDdata, 4, LSBFIRST, 131);
+  shiftOut(LEDdata, 4, LSBFIRST, 225);
+  shiftOut(LEDdata, 4, LSBFIRST, 97);
+  shiftOut(LEDdata, 4, LSBFIRST, 99);
+
+  shiftOut(LEDdata, 3, LSBFIRST, 19);
+  shiftOut(LEDdata, 3, LSBFIRST, 131);
+  shiftOut(LEDdata, 3, LSBFIRST, 225);
+  shiftOut(LEDdata, 3, LSBFIRST, 97);
+  shiftOut(LEDdata, 3, LSBFIRST, 99);
 
   shiftOut(LEDdata, 9, LSBFIRST, 19);
   shiftOut(LEDdata, 9, LSBFIRST, 131);
@@ -73,7 +89,7 @@ void setup()
   if (SAVE_MEMORY)
   {
     // load from eeprom and show
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < saves; i++)
     {
       int addr = num_size * i;
       for (int j = 0; j < num_size; j++)
@@ -117,10 +133,12 @@ void shift_eeprom(int num)
 void loop()
 {
 
-  char key = Kpd.getKey();
   decode_results result;
+  // char key = Kpd.getKey();
+  char key;
 
-  if (key || irrecv.decode(&result))
+  // if (key || irrecv.decode(&result))
+  if (irrecv.decode(&result))
   {
     Serial.println(key);
     Serial.println(result.value);
@@ -142,6 +160,14 @@ void loop()
     case 3896:
     case 551519865:
       key = 'D';
+      break;
+    case 624:
+    case 551535165:
+      key = 'E';
+      break;
+    case 112:
+    case 551525985:
+      key = 'F';
       break;
 
     case 2320:
@@ -259,12 +285,20 @@ void loop()
       pin = 4;
       eeprom_store_pos = num_size * 3;
       break;
+    case 'E':
+      pin = 5;
+      eeprom_store_pos = num_size * 4;
+      break;
+    case 'F':
+      pin = 6;
+      eeprom_store_pos = num_size * 5;
+      break;
 
-      // default:
-      //   pin=nullpin;
-      // break;
+    // default:
+    //   pin=nullpin;
+    // break;
     }
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < saves; i++)
     {
       int addr = num_size * i;
       for (int j = 0; j < num_size; j++)
